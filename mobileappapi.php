@@ -30,12 +30,11 @@ add_action( 'rest_api_init', function() {
 }, 15 );
 
 
-
-
 function test_jwt_auth_expire($issuedAt)
 {
     return $issuedAt + (62732 * 10000);
 }
+
 add_filter('jwt_auth_expire', 'test_jwt_auth_expire');
 
 add_action('rest_api_init', function () {
@@ -124,28 +123,27 @@ add_action('rest_api_init', function () {
 
 });
 
-
 function getProfile($request){
-     $data  = array(
+    $data  = array(
         "status" => "ok",
         "errormsg" => "",
         'error_code' => ""
     );
     $param = $request->get_params();
-     $token = $param['token'];
+    $token = $param['token'];
     $user_id = GetMobileAPIUserByIdToken($token);
     if($user_id){
         
-         $useravatar = get_user_meta($user_id,'wp_user_avatar',true); 
-           if($useravatar){
+        $useravatar = get_user_meta($user_id,'wp_user_avatar',true); 
+        if($useravatar){
             $img = wp_get_attachment_image_src($useravatar, array('150','150'), true );
-              $user_avatar=$img[0];
-              
-              //$response->data['author_avatar']=$user_avatar;
-           }else{
-             
-               $user_avatar='http://1.gravatar.com/avatar/1aedb8d9dc4751e229a335e371db8058?s=96&d=mm&r=g';
-           }
+            $user_avatar=$img[0];
+            
+            //$response->data['author_avatar']=$user_avatar;
+        }else{
+            
+            $user_avatar='http://1.gravatar.com/avatar/1aedb8d9dc4751e229a335e371db8058?s=96&d=mm&r=g';
+        }
         
         $user=get_userdata($user_id);   
         $role = 'subscriber';
@@ -153,35 +151,36 @@ function getProfile($request){
             $role = 'beacon';
         } 
         
-         $args = array(
-        	'posts_per_page'   => -1,
-        	'author'	   => $user_id,
-          );
-          
-          $count=0;
-          $posts_array = get_posts( $args );
-          if(count($posts_array)>0){
-              $count = count($posts_array);
-          }
+        $args = array(
+            'posts_per_page'   => -1,
+            'author'	   => $user_id,
+        );
+        
+        $count=0;
+        $posts_array = get_posts( $args );
+        if(count($posts_array)>0){
+            $count = count($posts_array);
+        }
 
-         $data=array();
-         $data['userImage']=$user_avatar;
-         $data['name']=get_user_meta($user_id,'first_name',true)." ".get_user_meta($user_id,'last_name',true);
-         $data['membership']='';
-         $data['job']=$role;
-         $data['school']="N/A";
-         $data['city']="Verinia";
-         $data['state']="NY";
-         $data['city_state']=$data['city'].", ".$data['state'];
-         $data['likes']=$user_id;
-         $data['followers']=(string)$count;
-         $data['following']='0';
-         //description
-         $data['about']=get_user_meta($user_id,'description',true);
-         
+        $data=array();
+        $data['userImage']=$user_avatar;
+        $data['name']=get_user_meta($user_id,'first_name',true)." ".get_user_meta($user_id,'last_name',true);
+        $data['membership']='';
+        $data['job']=$role;
+        $data['school']="N/A";
+        $data['city']="Verinia";
+        $data['state']="NY";
+        $data['city_state']=$data['city'].", ".$data['state'];
+        $data['likes']=$user_id;
+        $data['followers']=(string)$count;
+        $data['following']='0';
+        //description
+        $data['about']=get_user_meta($user_id,'description',true);
+        
 
-         return new WP_REST_Response($data, 200);
-    }else{
+        return new WP_REST_Response($data, 200);
+    }
+    else {
          $data  = array(
         "status" => "error",
         "errormsg" => "user token expired",
@@ -191,14 +190,14 @@ function getProfile($request){
 }
 
 function createFeed($request){
-    
-     $data  = array(
+
+    $data  = array(
         "status" => "ok",
         "errormsg" => "",
         'error_code' => ""
     );
     $param = $request->get_params();
-    	
+        
     $token = $param['token'];
     $user_id = GetMobileAPIUserByIdToken($token);
     if($user_id){
@@ -214,63 +213,60 @@ function createFeed($request){
         $post_id = wp_insert_post($new_post);
         
         if($post_id){
-        $data['post']=$post_id;
+            $data['post']=$post_id;
         
-                global $wpdb;
-                $address = trim($param['city']).", ".trim($param['state'])." ".trim($param['zipcode']).", USA"; // Google HQ
-                $row_ln = $wpdb->get_row("SELECT * FROM `wp_latlon` WHERE `zipcode` ='".$address."'");
-                if(count($row_ln)==0){
-                //$key = 'AIzaSyAJSffEDfIkpgatiOvePj_db4BFfqHAYNk';
-                    
-                    $prepAddr = str_replace(' ','+',$address);
-                    $key = 'AIzaSyAJSffEDfIkpgatiOvePj_db4BFfqHAYNk';
-                    $geo = wp_remote_fopen('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&key='.urlencode($key));
-               
-                     // We convert the JSON to an array
-                    $geo = json_decode($geo, true);
-               
+            global $wpdb;
+            $address = trim($param['city']).", ".trim($param['state'])." ".trim($param['zipcode']).", USA"; // Google HQ
+            $row_ln = $wpdb->get_row("SELECT * FROM `wp_latlon` WHERE `zipcode` ='".$address."'");
+            if(count($row_ln)==0){
+            //$key = 'AIzaSyAJSffEDfIkpgatiOvePj_db4BFfqHAYNk';
+                
+                $prepAddr = str_replace(' ','+',$address);
+                $key = 'AIzaSyAJSffEDfIkpgatiOvePj_db4BFfqHAYNk';
+                $geo = wp_remote_fopen('https://maps.googleapis.com/maps/api/geocode/json?address='.urlencode($address).'&key='.urlencode($key));
             
-                   // If everything is cool
-                   if ($geo['status'] = 'OK') {
-                       
-                      $lat = $geo['results'][0]['geometry']['location']['lat'];
-                      $lon = $geo['results'][0]['geometry']['location']['lng'];
-                       $wpdb->insert("wp_latlon",array('zipcode'=>$address,'lat'=>$lat,'lon'=>$lon));
-                   }
-                }else{
-                   $lat = $row_ln->lat;
-                   $lon = $row_ln->lon;  
+                    // We convert the JSON to an array
+                $geo = json_decode($geo, true);
+            
+        
+                // If everything is cool
+                if ($geo['status'] = 'OK') {
+                    
+                    $lat = $geo['results'][0]['geometry']['location']['lat'];
+                    $lon = $geo['results'][0]['geometry']['location']['lng'];
+                    $wpdb->insert("wp_latlon",array('zipcode'=>$address,'lat'=>$lat,'lon'=>$lon));
                 }
+            }else{
+                $lat = $row_ln->lat;
+                $lon = $row_ln->lon;  
+            }
         
-         update_post_meta($post_id,"map_lat",$lat);
-         update_post_meta($post_id,"map_lng",$lon);
-        
-        update_post_meta($post_id,"category",$param['category']);
-        update_post_meta($post_id,"zipcode",$param['zipcode']);
-        update_post_meta($post_id,"price",$param['price']);
-        update_post_meta($post_id,"city",$param['city']);
-        update_post_meta($post_id,"state",$param['state']);
-        return new WP_REST_Response($data, 200);
+            update_post_meta($post_id,"map_lat",$lat);
+            update_post_meta($post_id,"map_lng",$lon);
+            update_post_meta($post_id,"category",$param['category']);
+            update_post_meta($post_id,"zipcode",$param['zipcode']);
+            update_post_meta($post_id,"price",$param['price']);
+            update_post_meta($post_id,"city",$param['city']);
+            update_post_meta($post_id,"state",$param['state']);
+            return new WP_REST_Response($data, 200);
         }else{
-          $data['post']=$new_post;    
-          $data['errormsg']="post not created, something went wrong.";    
-          return new WP_REST_Response($data, 403);   
+            $data['post']=$new_post;    
+            $data['errormsg']="post not created, something went wrong.";    
+            return new WP_REST_Response($data, 403);   
         }
     }else{
         $data  = array(
-        "status" => "error",
-        "errormsg" => "user token expired",
-        'error_code' => "user_expire"
-    );
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
+        );
     }
     return new WP_REST_Response($data, 403);
-    
-  }
-  
-  
-  
-  function getNearBy($request) {
-      
+
+}
+
+function getNearBy($request)
+{
     global $wpdb;
     $data  = array(
         "status" => "ok",
@@ -297,49 +293,49 @@ function createFeed($request){
         }
         
          $sql = "
-        SELECT DISTINCT
+            SELECT DISTINCT
             p.ID,
             p.post_title,(select meta_value from $wpdb->postmeta where post_id=p.ID AND meta_key='map_lat') as locLat ,
             (select meta_value from $wpdb->postmeta where post_id=p.ID AND meta_key='map_lng') as locLong 
-        FROM $wpdb->posts p
-        INNER JOIN $wpdb->postmeta m ON p.ID = m.post_id
-        WHERE 1 = 1
-        AND p.post_type = 'beacon_services'
-        AND p.post_status = 'publish'
-        $q";
+            FROM $wpdb->posts p
+            INNER JOIN $wpdb->postmeta m ON p.ID = m.post_id
+            WHERE 1 = 1
+            AND p.post_type = 'beacon_services'
+            AND p.post_status = 'publish'
+            $q";
         
-    }else{
-        
-    $sql = $wpdb->prepare( "
-        SELECT DISTINCT
-            p.ID,
-            p.post_title,
-            map_lat.meta_value as locLat,
-            map_lng.meta_value as locLong,
-            ( %d * acos(
-            cos( radians( %s ) )
-            * cos( radians( map_lat.meta_value ) )
-            * cos( radians( map_lng.meta_value ) - radians( %s ) )
-            + sin( radians( %s ) )
-            * sin( radians( map_lat.meta_value ) )
-            ) )
-            AS distance
-        FROM $wpdb->posts p
-        INNER JOIN $wpdb->postmeta map_lat ON p.ID = map_lat.post_id
-        INNER JOIN $wpdb->postmeta map_lng ON p.ID = map_lng.post_id
-        WHERE 1 = 1
-        AND p.post_type = 'beacon_services'
-        AND p.post_status = 'publish'
-        AND map_lat.meta_key = 'map_lat'
-        AND map_lng.meta_key = 'map_lng'
-        HAVING distance < %s
-        ORDER BY distance ASC",
-        $earth_radius,
-        $lat,
-        $lng,
-        $lat,
-        $distance
-    );
+    }
+    else {
+        $sql = $wpdb->prepare( "
+            SELECT DISTINCT
+                p.ID,
+                p.post_title,
+                map_lat.meta_value as locLat,
+                map_lng.meta_value as locLong,
+                ( %d * acos(
+                cos( radians( %s ) )
+                * cos( radians( map_lat.meta_value ) )
+                * cos( radians( map_lng.meta_value ) - radians( %s ) )
+                + sin( radians( %s ) )
+                * sin( radians( map_lat.meta_value ) )
+                ) )
+                AS distance
+            FROM $wpdb->posts p
+            INNER JOIN $wpdb->postmeta map_lat ON p.ID = map_lat.post_id
+            INNER JOIN $wpdb->postmeta map_lng ON p.ID = map_lng.post_id
+            WHERE 1 = 1
+            AND p.post_type = 'beacon_services'
+            AND p.post_status = 'publish'
+            AND map_lat.meta_key = 'map_lat'
+            AND map_lng.meta_key = 'map_lng'
+            HAVING distance < %s
+            ORDER BY distance ASC",
+            $earth_radius,
+            $lat,
+            $lng,
+            $lat,
+            $distance
+        );
     }
 
     // Uncomment and paste into phpMyAdmin to debug.
@@ -349,102 +345,104 @@ function createFeed($request){
     if(count($nearbyLocations)>0){
         $data['services']=$nearbyLocations;
     }else{
-       $data['services']=false;
+        $data['services']=false;
     }
     
     return new WP_REST_Response($data, 200); 
 }
   
- function create_product($request){
-     $data  = array(
-        "status" => "ok",
-        "errormsg" => "",
-        'error_code' => ""
+function create_product($request)
+{
+    $data  = array(
+    "status" => "ok",
+    "errormsg" => "",
+    'error_code' => ""
     );
     $param = $request->get_params();
-    	
+        
     $token = $param['token'];
     $user_id = GetMobileAPIUserByIdToken($token);
     if($user_id){
         $new_post = array(
-        'post_title' =>$param['post_title'],
-        'post_content' =>$param['post_content'],
-        'post_status' => 'publish',
-        'post_author' => $user_id,
-        'post_type' => 'products',
-        'post_category' => array(0)
+            'post_title' =>$param['post_title'],
+            'post_content' =>$param['post_content'],
+            'post_status' => 'publish',
+            'post_author' => $user_id,
+            'post_type' => 'products',
+            'post_category' => array(0)
         );
         
         $post_id = wp_insert_post($new_post);
         
         if($post_id){
-        $data['post']=$post_id;
-        update_post_meta($post_id,"category",$param['category']);
-        update_post_meta($post_id,"price",$param['price']);
-        return new WP_REST_Response($data, 200);
+            $data['post']=$post_id;
+            update_post_meta($post_id,"category",$param['category']);
+            update_post_meta($post_id,"price",$param['price']);
+            return new WP_REST_Response($data, 200);
         }else{
-          $data['post']=$new_post;    
-          $data['errormsg']="post not created, something went wrong.";    
-          return new WP_REST_Response($data, 403);   
+            $data['post']=$new_post;    
+            $data['errormsg']="post not created, something went wrong.";    
+            return new WP_REST_Response($data, 403);   
         }
     }else{
         $data  = array(
-        "status" => "error",
-        "errormsg" => "user token expired",
-        'error_code' => "user_expire"
-    );
-    }
-    return new WP_REST_Response($data, 403); 
- }
- 
- function create_contact($request){
-     
-     $data  = array(
-        "status" => "ok",
-        "errormsg" => "",
-        'error_code' => ""
-    );
-    $param = $request->get_params();
-    	
-    $token = $param['token'];
-    $user_id = GetMobileAPIUserByIdToken($token);
-    if($user_id){
-        $new_post = array(
-        'post_title' =>"Request From ".$param['name'],
-        'post_content' =>$param['post_content'],
-        'post_status' => 'publish',
-        'post_author' => $user_id,
-        'post_type' => 'services_request',
-        'post_category' => array(0)
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
         );
-        
-        $post_id = wp_insert_post($new_post);
-        
-        if($post_id){
-        $data['post']=$post_id;
-         update_post_meta($post_id,"name",$param['name']);
-          update_post_meta($post_id,"email",$param['email']);
-           update_post_meta($post_id,"contact_number",$param['contact_number']);
-            update_post_meta($post_id,"message",$param['post_content']);
-             update_post_meta($post_id,"service",$param['service']);
-        return new WP_REST_Response($data, 200);
-        }else{
-          $data['post']=$new_post;    
-          $data['errormsg']="Conatct not created, something went wrong.";    
-          return new WP_REST_Response($data, 403);   
-        }
-    }else{
-        $data  = array(
-        "status" => "error",
-        "errormsg" => "user token expired",
-        'error_code' => "user_expire"
-    );
     }
     return new WP_REST_Response($data, 403); 
- }
+}
 
-function submitComment($request){
-   global $wpdb;
+function create_contact($request)
+{
+    $data  = array(
+        "status" => "ok",
+        "errormsg" => "",
+        'error_code' => ""
+    );
+    $param = $request->get_params();
+        
+    $token = $param['token'];
+    $user_id = GetMobileAPIUserByIdToken($token);
+    if($user_id){
+        $new_post = array(
+            'post_title' =>"Request From ".$param['name'],
+            'post_content' =>$param['post_content'],
+            'post_status' => 'publish',
+            'post_author' => $user_id,
+            'post_type' => 'services_request',
+            'post_category' => array(0)
+        );
+        
+        $post_id = wp_insert_post($new_post);
+        
+        if($post_id){
+            $data['post']=$post_id;
+            update_post_meta($post_id,"name",$param['name']);
+            update_post_meta($post_id,"email",$param['email']);
+            update_post_meta($post_id,"contact_number",$param['contact_number']);
+            update_post_meta($post_id,"message",$param['post_content']);
+            update_post_meta($post_id,"service",$param['service']);
+            return new WP_REST_Response($data, 200);
+        }else{
+            $data['post']=$new_post;    
+            $data['errormsg']="Conatct not created, something went wrong.";    
+            return new WP_REST_Response($data, 403);   
+        }
+    }else{
+        $data  = array(
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
+        );
+    }
+    return new WP_REST_Response($data, 403); 
+}
+
+function submitComment($request)
+{
+    global $wpdb;
     $data  = array(
         "status" => "ok",
         "errormsg" => "",
@@ -461,10 +459,10 @@ function submitComment($request){
     $user_id = GetMobileAPIUserByIdToken($token);
 
     if(!$user_id){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid token');
-       $data['error_code'] = "invalid_token";
-       return new WP_REST_Response($data, 403);	
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid token');
+        $data['error_code'] = "invalid_token";
+        return new WP_REST_Response($data, 403);	
     }
 
     // get user by user id
@@ -472,54 +470,53 @@ function submitComment($request){
     $user= $user_temp->data;
 
     if(empty($user)){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid user');
-       $data['error_code'] = "invalid_user";
-       return new WP_REST_Response($data, 403);	
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid user');
+        $data['error_code'] = "invalid_user";
+        return new WP_REST_Response($data, 403);	
     }
 
     // check if comment and post id exist
     if($comment=='' || $post_id==''){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid request');
-       $data['error_code'] = "invalid_request";
-       return new WP_REST_Response($data, 403);
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid request');
+        $data['error_code'] = "invalid_request";
+        return new WP_REST_Response($data, 403);
     }
 
-	  $args = array(
-	    'comment_post_ID' => $post_id,
-	    'comment_author' => $user->user_login,
-	    'comment_author_email' => $user->user_email,
-	    'comment_author_url' => 'http://',
-	    'comment_content' => $comment,
-	    'comment_type' => '',
-	    //'comment_parent' => 0,
-	    'user_id' => $user->ID,
-	    'comment_author_IP' => $_SERVER['REMOTE_ADDR'],
-	    'comment_date' => current_time('mysql'),
-	    'comment_approved' => 1,
-	  );
+    $args = array(
+        'comment_post_ID' => $post_id,
+        'comment_author' => $user->user_login,
+        'comment_author_email' => $user->user_email,
+        'comment_author_url' => 'http://',
+        'comment_content' => $comment,
+        'comment_type' => '',
+        //'comment_parent' => 0,
+        'user_id' => $user->ID,
+        'comment_author_IP' => $_SERVER['REMOTE_ADDR'],
+        'comment_date' => current_time('mysql'),
+        'comment_approved' => 1,
+    );
 
-	  //print_r($args); exit;
     if(wp_insert_comment($args)){
-    	$data  = array(
-	        "status" => "ok",
-	        "msg"    => "comment submitted successfully",
-	        "errormsg" => "",
-	        'error_code' => ""
-       );
+        $data  = array(
+            "status" => "ok",
+            "msg"    => "comment submitted successfully",
+            "errormsg" => "",
+            'error_code' => ""
+        );
 
-       return new WP_REST_Response($data, 200);
+        return new WP_REST_Response($data, 200);
     }else{
-       $data['status']     = "error";
-       $data['errormsg']   = __('Comment could not be submitted');
-       $data['error_code'] = "invalid_request";
-       return new WP_REST_Response($data, 403);	
+        $data['status']     = "error";
+        $data['errormsg']   = __('Comment could not be submitted');
+        $data['error_code'] = "invalid_request";
+        return new WP_REST_Response($data, 403);	
     }
 }
 
-function getComment($request){
-   
+function getComment($request)
+{
    $data = array(
         "status" => "ok",
         "errormsg" => "",
@@ -535,35 +532,33 @@ function getComment($request){
    
    $comments_arr= array();
    foreach($comments as $comment){
-      if($comment->comment_parent==0){
-          $temp= array();
-          $temp['id'] = $comment->comment_ID;
-          $temp['comment_author'] = $comment->comment_author;
-          $temp['comment_date'] = $comment->comment_date;
-          $temp['content'] = $comment->comment_content;
-          $child= get_child($temp);
-          if($child){
-             $temp['child']= $child;
-          }
+        if($comment->comment_parent==0){
+            $temp= array();
+            $temp['id'] = $comment->comment_ID;
+            $temp['comment_author'] = $comment->comment_author;
+            $temp['comment_date'] = $comment->comment_date;
+            $temp['content'] = $comment->comment_content;
+            $child= get_child($temp);
+            if($child){
+                $temp['child']= $child;
+            }
 
-          $comments_arr[]= $temp;
-      }
+            $comments_arr[]= $temp;
+        }
    }
-
-   //print_r($comments_arr); exit;
 
    return new WP_REST_Response($comments_arr, 200);
 }
 
 
-function replyComment($request){
+function replyComment($request)
+{
     $data  = array(
         "status" => "ok",
         "errormsg" => "",
         'error_code' => ""
     );
 
-   
     $param = $request->get_params();
 
     $token = $param['token'];
@@ -574,10 +569,10 @@ function replyComment($request){
     $user_id = GetMobileAPIUserByIdToken($token);
 
     if(!$user_id){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid token');
-       $data['error_code'] = "invalid_token";
-       return new WP_REST_Response($data, 403); 
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid token');
+        $data['error_code'] = "invalid_token";
+        return new WP_REST_Response($data, 403); 
     }
 
     // get user by user id
@@ -585,53 +580,54 @@ function replyComment($request){
     $user= $user_temp->data;
 
     if(empty($user)){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid user');
-       $data['error_code'] = "invalid_user";
-       return new WP_REST_Response($data, 403); 
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid user');
+        $data['error_code'] = "invalid_user";
+        return new WP_REST_Response($data, 403); 
     }
 
     // check if comment and post id exist
     if($parent_cid=='' || $post_id=='' || $reply==''){
-       $data['status']     = "error";
-       $data['errormsg']   = __('Invalid request');
-       $data['error_code'] = "invalid_request";
-       return new WP_REST_Response($data, 403);
+        $data['status']     = "error";
+        $data['errormsg']   = __('Invalid request');
+        $data['error_code'] = "invalid_request";
+        return new WP_REST_Response($data, 403);
     }
 
     $args = array(
-      'comment_post_ID' => $post_id,
-      'comment_author' => $user->user_login,
-      'comment_author_email' => $user->user_email,
-      'comment_author_url' => 'http://',
-      'comment_content' => $reply,
-      'comment_type' => '',
-      'comment_parent' => $parent_cid,
-      'user_id' => $user->ID,
-      'comment_author_IP' => $_SERVER['REMOTE_ADDR'],
-      'comment_date' => current_time('mysql'),
-      'comment_approved' => 1,
+        'comment_post_ID' => $post_id,
+        'comment_author' => $user->user_login,
+        'comment_author_email' => $user->user_email,
+        'comment_author_url' => 'http://',
+        'comment_content' => $reply,
+        'comment_type' => '',
+        'comment_parent' => $parent_cid,
+        'user_id' => $user->ID,
+        'comment_author_IP' => $_SERVER['REMOTE_ADDR'],
+        'comment_date' => current_time('mysql'),
+        'comment_approved' => 1,
     );
 
     //print_r($args); exit;
     if(wp_insert_comment($args)){
-       $data  = array(
-          "status" => "ok",
-          "msg"    => "comment submitted successfully",
-          "errormsg" => "",
-          'error_code' => ""
-       );
+        $data  = array(
+            "status" => "ok",
+            "msg"    => "comment submitted successfully",
+            "errormsg" => "",
+            'error_code' => ""
+        );
 
-       return new WP_REST_Response($data, 200);
+        return new WP_REST_Response($data, 200);
     }else{
-       $data['status']     = "error";
-       $data['errormsg']   = __('Comment could not be submitted');
-       $data['error_code'] = "invalid_request";
-       return new WP_REST_Response($data, 403); 
+        $data['status']     = "error";
+        $data['errormsg']   = __('Comment could not be submitted');
+        $data['error_code'] = "invalid_request";
+        return new WP_REST_Response($data, 403); 
     }
 }
 
-function get_child($comment){
+function get_child($comment)
+{
     // child comment
     $args = array('parent' => $comment['id'], 'order' => 'ASC');
     $child_cmts = get_comments($args);
@@ -651,7 +647,8 @@ function get_child($comment){
     return $child_arr;
 }
 
-function updateProfile($request){
+function updateProfile($request)
+{
     global $wpdb;
     $data  = array(
         "status" => "ok",
@@ -679,28 +676,28 @@ function updateProfile($request){
     if ($email != '' && $username != '') {
 
         if(!filter_var($email, FILTER_VALIDATE_EMAIL)){
-           $data['status']     = "error";
-           $data['errormsg']   = __('This is not a Valid Email.');
-           $data['error_code'] = "invalid_email";
-           return new WP_REST_Response($data, 403);
+            $data['status']     = "error";
+            $data['errormsg']   = __('This is not a Valid Email.');
+            $data['error_code'] = "invalid_email";
+            return new WP_REST_Response($data, 403);
         }
 
         // if email already exist
         $already_exist=email_exists($email);
         if($already_exist && $already_exist!=$user_id){
-           $data['status']     = "error";
-           $data['errormsg']   = __('Email already exist');
-           $data['error_code'] = "invalid_email";
-           return new WP_REST_Response($data, 403);
+            $data['status']     = "error";
+            $data['errormsg']   = __('Email already exist');
+            $data['error_code'] = "invalid_email";
+            return new WP_REST_Response($data, 403);
         }
 
         // if username already exist
         $already_exist=username_exists($username);
         if($already_exist && $already_exist!=$user_id){
-           $data['status']     = "error";
-           $data['errormsg']   = __('Username already exist');
-           $data['error_code'] = "invalid_username";
-           return new WP_REST_Response($data, 403);
+            $data['status']     = "error";
+            $data['errormsg']   = __('Username already exist');
+            $data['error_code'] = "invalid_username";
+            return new WP_REST_Response($data, 403);
         }
         
         $userdata= array();
@@ -715,7 +712,6 @@ function updateProfile($request){
         
     }
 }
-
 
 function facebook_login($request)
 {
@@ -1032,6 +1028,7 @@ function RetrivePassword($request)
 
 //apply_filters('jwt_auth_token_before_dispatch', $data, $user);
 add_filter('jwt_auth_token_before_dispatch', 'mobileapi_jwt_auth_token_before_dispatch', 10, 2);
+
 function mobileapi_jwt_auth_token_before_dispatch($data, $user)
 {
 
@@ -1039,7 +1036,6 @@ function mobileapi_jwt_auth_token_before_dispatch($data, $user)
     if (in_array('coach', (array) $user->roles)) {
         $role = 'coach';
     }
-
 
     $data['role'] = $role;
     $first_name = get_user_meta($user->ID, "first_name", true);
@@ -1056,7 +1052,6 @@ function mobileapi_jwt_auth_token_before_dispatch($data, $user)
         $data['user_avatar'] = 'http://1.gravatar.com/avatar/1aedb8d9dc4751e229a335e371db8058?s=96&d=mm&r=g';
     }
     $data['user_id'] = $user->ID;
-   
 
     return $data;
 }
@@ -1076,41 +1071,39 @@ function GetUserImage($request)
     return new WP_REST_Response($data, 200);
 }
 
-
-
-
 add_filter('rest_prepare_beacon_services', 'func_rest_prepare_beacon_services', 10, 3 );
 add_filter('rest_prepare_products', 'func_rest_prepare_beacon_services', 10, 3 );
 
-function func_rest_prepare_beacon_services( $data, $post, $request ) {
+function func_rest_prepare_beacon_services( $data, $post, $request ) 
+{
     $commentCount = wp_count_comments($post->ID);
     $data->data['comment_count'] = $commentCount->approved;
     global $wpdb;
-   if($data->data['featured_media']>0){
-       $image_attributes = wp_get_attachment_image_src($data->data['featured_media'],'large');
-       $data->data['media_url']=$image_attributes[0];
-   }else{
-       $data->data['media_url']='https://via.placeholder.com/150';
-   }
+    if($data->data['featured_media']>0){
+        $image_attributes = wp_get_attachment_image_src($data->data['featured_media'],'large');
+        $data->data['media_url']=$image_attributes[0];
+    }else{
+        $data->data['media_url']='https://via.placeholder.com/150';
+    }
    
-  $data->data['price'] = "$".get_post_meta($post->ID,'price',true);
-  $data->data['city'] = get_post_meta($post->ID,'city',true);
-  $data->data['state'] = get_post_meta($post->ID,'state',true);
-  $data->data['category'] = get_post_meta($post->ID,'category',true);
-  $term = get_term($data->data['category'],'service_category');
-  $data->data['category_name'] = $term->name;
-  
-  $first_name = get_user_meta($data->data['author'],'first_name',true);
-  $last_name = get_user_meta($data->data['author'],'last_name',true);
-  
-  $name = $first_name." ".$last_name;
-  $nameL = $first_name.$last_name;
-  if($nameL==''){
-      $data->data['author_name'] = get_user_meta($data->data['author'],'nickname',true);
-  }else{
-     $data->data['author_name'] = $name ;
-  }
-  
+    $data->data['price'] = "$".get_post_meta($post->ID,'price',true);
+    $data->data['city'] = get_post_meta($post->ID,'city',true);
+    $data->data['state'] = get_post_meta($post->ID,'state',true);
+    $data->data['category'] = get_post_meta($post->ID,'category',true);
+    $term = get_term($data->data['category'],'service_category');
+    $data->data['category_name'] = $term->name;
+
+    $first_name = get_user_meta($data->data['author'],'first_name',true);
+    $last_name = get_user_meta($data->data['author'],'last_name',true);
+
+    $name = $first_name." ".$last_name;
+    $nameL = $first_name.$last_name;
+    if($nameL==''){
+        $data->data['author_name'] = get_user_meta($data->data['author'],'nickname',true);
+    }else{
+        $data->data['author_name'] = $name ;
+    }
+
 
    
     $useravatar = get_user_meta($data->data['author'],'wp_user_avatar',true); 
@@ -1128,80 +1121,177 @@ function func_rest_prepare_beacon_services( $data, $post, $request ) {
 
 //do_action( 'rest_insert_attachment', $attachment, $request, true );
 add_action('rest_insert_attachment','func_rest_insert_attachment',10,3);
-function func_rest_insert_attachment($attachment, $request,$is_create){
-  
-  if(isset($request['post']) && $request['post']!=''){
-      set_post_thumbnail($request['post'],$attachment->ID);
-  }
-  if(isset($request['type']) && $request['type']=="edit"){
-      if(isset($request['old_image']) && $request['old_image']!=""){
-           wp_delete_attachment($request['old_image'],true); 
-      }
-  }
-  //_wp_attachment_wp_user_avatar
-  
-  if(isset($request['_wp_attachment_wp_user_avatar']) && $request['_wp_attachment_wp_user_avatar']!=''){
-      //set_post_thumbnail($request['post'],$attachment->ID);
-      update_post_meta($attachment->ID, '_wp_attachment_wp_user_avatar', $request['_wp_attachment_wp_user_avatar']);
-      //wp_user_avatar
-      update_user_meta($request['_wp_attachment_wp_user_avatar'], 'wp_user_avatar', $attachment->ID);
-  }
+
+function func_rest_insert_attachment($attachment, $request,$is_create)
+{
+    if(isset($request['post']) && $request['post']!=''){
+        set_post_thumbnail($request['post'],$attachment->ID);
+    }
+    if(isset($request['type']) && $request['type']=="edit"){
+        if(isset($request['old_image']) && $request['old_image']!=""){
+            wp_delete_attachment($request['old_image'],true); 
+        }
+    }
+    //_wp_attachment_wp_user_avatar
+
+    if(isset($request['_wp_attachment_wp_user_avatar']) && $request['_wp_attachment_wp_user_avatar']!=''){
+        //set_post_thumbnail($request['post'],$attachment->ID);
+        update_post_meta($attachment->ID, '_wp_attachment_wp_user_avatar', $request['_wp_attachment_wp_user_avatar']);
+        //wp_user_avatar
+        update_user_meta($request['_wp_attachment_wp_user_avatar'], 'wp_user_avatar', $attachment->ID);
+    }
 }
 
 ////apply_filters( "rest_{$this->post_type}_query", $args, $request ); 
 add_filter('rest_beacon_services_query', 'func_rest_beacon_services_query', 10, 2 );
 add_filter('rest_products_query', 'func_rest_beacon_services_query', 10, 2 );
+
 function func_rest_beacon_services_query($args, $request)
 {
     $param = $request->get_params();
     $token = $param['token'];
     if($token!='' && $param['mypost']==1){
-       $user_id = GetMobileAPIUserByIdToken($token); 
-       if($user_id){
-         $args['author']=$user_id;
-       }else{
-          $args['author']=72348237483278274827482374; 
-       }
+        $user_id = GetMobileAPIUserByIdToken($token); 
+        if($user_id){
+            $args['author']=$user_id;
+        }else{
+            $args['author']=72348237483278274827482374; 
+        }
        
     }
-    
     
     return $args;
 }
 
-
-function fetch_cat($request){
-    
-  $param = $request->get_params();
+function fetch_cat($request)
+{
+    $param = $request->get_params();
   
-  $terms = get_terms( array(
-    'taxonomy' => 'service_category',
-    'hide_empty' => false,
-   ) );
+    $terms = get_terms( array(
+        'taxonomy' => 'service_category',
+        'hide_empty' => false,
+    ) );
    
-   $kits = array();
-   $activeKitName='';
-   $res = array("status"=>"error","cat"=>'');
-   
-         $active_profile =false;
-         foreach($terms as $tm){
-               $kit_item = array();
-               $kit_item['name']=$tm->name;
-               $kit_item['id']=$tm->term_id;
-               $term_image = get_term_meta($tm->term_id, 'image', true);
-               if($term_image){
-                $img = wp_get_attachment_image_src($term_image, array('150','150'), true );
-               $kit_item['image']=$img[0];    
-               }
-               
-               $kits[]=$kit_item;
-           }
+    $kits = array();
+    $activeKitName='';
+    $res = array("status"=>"error","cat"=>'');
+
+        $active_profile =false;
+        foreach($terms as $tm){
+            $kit_item = array();
+            $kit_item['name']=$tm->name;
+            $kit_item['id']=$tm->term_id;
+            $term_image = get_term_meta($tm->term_id, 'image', true);
+            if($term_image){
+            $img = wp_get_attachment_image_src($term_image, array('150','150'), true );
+            $kit_item['image']=$img[0];    
+            }
+            
+            $kits[]=$kit_item;
+        }
         $res['status']="ok";
         return new WP_REST_Response($kits, 200);
-       
+        
 
     return new WP_REST_Response($res, 403);
 }
 
 
+// live broadcasting
 
+function add_live_channel($request)
+{
+    $data  = array(
+        "status" => "ok",
+        "errormsg" => "",
+        'error_code' => ""
+    );
+    $param = $request->get_params();
+
+    $token = $param['token'];
+    $user_id = GetMobileAPIUserByIdToken($token);
+
+    if($user_id){
+        
+        global $wpdb;
+        $wpdb->insert("wp_mobileapi_channels",array('userid'=>$user_id,'channel_name'=>$param['channel_name'],'broadcaster'=>$param['broadcaster']));
+        $channel_id = $wpdb->insert_id;
+
+        $data['channel_id'] = $channel_id;
+        return new WP_REST_Response($data, 200);
+    }else{
+        $data  = array(
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
+        );
+    }
+   return new WP_REST_Response($data, 403); 
+}
+
+function get_live_channels($request)
+{
+    $data  = array(
+        "status" => "ok",
+        "errormsg" => "",
+        'error_code' => ""
+    );
+    $param = $request->get_params();
+
+    $token = $param['token'];
+    $user_id = GetMobileAPIUserByIdToken($token);
+
+    if($user_id){
+        
+        global $wpdb;
+        $query = "select * from wp_mobileapi_channels";
+        $results = $wpdb->get_results($query);
+
+        $channels = array();
+        foreach ($results as $row) {
+            $item = array();
+            $item['userid'] = $row['userid'];
+            $item['channel_name'] = $row['channel_name'];
+            $item['broadcaster'] = $row['broadcaster'];
+            $channels[] = $item;
+        }
+
+        $data['channels'] = $channels;
+        return new WP_REST_Response($data, 200);
+    }else{
+        $data  = array(
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
+        );
+    }
+   return new WP_REST_Response($data, 403); 
+}
+
+function remove_live_channel($request)
+{
+    $data  = array(
+        "status" => "ok",
+        "errormsg" => "",
+        'error_code' => ""
+    );
+    $param = $request->get_params();
+
+    $token = $param['token'];
+    $user_id = GetMobileAPIUserByIdToken($token);
+
+    if($user_id){
+        
+        global $wpdb;
+        $wpdb->delete('wp_mobileapi_channels', array('id'=>$param['channel_id']));
+
+        return new WP_REST_Response($data, 200);
+    }else{
+        $data  = array(
+            "status" => "error",
+            "errormsg" => "user token expired",
+            'error_code' => "user_expire"
+        );
+    }
+   return new WP_REST_Response($data, 403); 
+}
